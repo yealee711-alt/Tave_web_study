@@ -63,7 +63,7 @@ feat/board-name
 | 3주차 | Board    | `feat/board-이름` |
 | 4주차 | Board 개선 | `feat/board-이름` |
 
-> 1~2주차는 Todo, 3~4주차는 Board를 진행합니다.
+> 1-2주차는 Todo, 3-4주차는 Board를 진행합니다.
 
 ---
 
