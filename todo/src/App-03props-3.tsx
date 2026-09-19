@@ -6,18 +6,19 @@ interface MyComponentProps {
   p4: string;
 }
 
-// 2. p1과 p3만 골라서 받기
-function MyComponent({ p1, p3 }: MyComponentProps) {
+// 2. 구조 분해 할당({ p1, p2, p3, p4 })으로 props 받기
+function MyComponent({ p1, p2, p3, p4 }: MyComponentProps) {
   return (
     <>
       <h2>프롭스 구조분해할당</h2>
       <p>
-        {p1}, {p3}
+        {p1}, {p2}, {p3}, {p4}
       </p>
     </>
   );
 }
 
+// 3. 최상위 App 컴포넌트
 function App() {
   return (
     <>
