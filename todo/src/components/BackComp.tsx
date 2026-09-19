@@ -1,16 +1,15 @@
-// src/components/BackComp.tsx
-
 interface BackCompProps {
-  onMyEvent2: (msg: string) => void;
+  setMode: (mode: string) => void;
 }
 
-const BackComp = ({ onMyEvent2 }: BackCompProps) => {
+const BackComp = ({ setMode }: BackCompProps) => {
   return (
     <>
       <li>
         <a href="/" onClick={(event) => {
           event.preventDefault();
-          onMyEvent2('백엔드 클릭됨(자식전달)');
+          // 상태 변경 함수를 직접 호출하며 'back'을 올려보냄
+          setMode('back'); 
         }}>백엔드</a>
       </li>
       <ul>
@@ -23,5 +22,4 @@ const BackComp = ({ onMyEvent2 }: BackCompProps) => {
   );
 };
 
-// 화살표 함수는 변수에 담아서 선언하고 변수를 export default로 내보냄
 export default BackComp;
