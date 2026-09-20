@@ -1,0 +1,48 @@
+import {useState} from 'react'
+import Header from './components/Header'
+import TextInput from './components/TextInput'
+import TaskList from './components/TaskList'
+import type {Task} from './types'
+
+function App() {
+  const [tasks, setTasks] = useState<Task[]>([])
+
+  function addTask(text: string){
+    const newTask: Task = {
+      id: Date.now(),
+      text: text,
+      completed: false,
+    }
+    setTasks([...tasks, newTask])
+  }
+  function toggleTask(id: number){
+    setTasks(
+      tasks.map((task)=>
+        task.id === id
+          ? {...task, completed: !task.completed}
+          : task
+      )
+    )
+  }
+  function deleteTask(id: number){
+    setTasks(
+      tasks.filter((task)=>task.id !== id)
+    )
+  }
+
+  return (
+    <main className="min-h-screen bg-stone-100 px-6 py-12">
+      <div className="mx-auto flex max-w-md flex-col gap-6 rounded-3xl bg-white p-8">
+        <Header />
+        <TextInput onAdd={addTask}/>
+        <TaskList 
+          tasks={tasks}
+          onToggle={toggleTask} 
+          onDelete={deleteTask}
+        />
+      </div>
+    </main>
+  )
+}
+
+export default App
