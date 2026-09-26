@@ -13,7 +13,7 @@ export default function TodoApp() {
     e.preventDefault();
     if (!text.trim()) return;
     
-    dispatch(addTodo(text));
+    dispatch(addTodo(text.trim()));
     setText('');
   };
 
