@@ -41,7 +41,7 @@ export default function TextInput({ onAdd }: TextInputProps) {
           {value.length} / {MAX_LENGTH}자{remaining === 0 && ' (최대 글자 수 도달)'}
         </p>
       </div>
-      <Button type="submit" className="bg-gray-800 text-white hover:bg-gray-700">
+      <Button type="submit" disabled={!value.trim()} className="bg-gray-800 text-white hover:bg-gray-700">
         추가
       </Button>
     </form>

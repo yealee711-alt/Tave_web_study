@@ -15,6 +15,7 @@ export default function TaskItem({ todo, onToggle, onDelete }: TaskItemProps) {
         type="checkbox"
         checked={todo.completed}
         onChange={() => onToggle(todo.id)}
+        aria-label={`${todo.text} 완료 여부`}
         className="h-4 w-4 shrink-0 accent-gray-800"
       />
       <span
