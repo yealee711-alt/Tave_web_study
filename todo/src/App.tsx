@@ -2,18 +2,19 @@ import { useState } from 'react';
 import Header from './components/Header';
 import TextInput from './components/TextInput';
 import TaskList from './components/TaskList';
-import type { Todo } from './types/todo';
+import type { Todo, Category } from './types/todo';
 
 function App() {
   // 할 일 목록 전체를 관리하는 상태 (최상위 컴포넌트에서 관리 후 props로 전달)
   const [todos, setTodos] = useState<Todo[]>([]);
 
   // 새 할 일 추가
-  const handleAdd = (text: string) => {
+  const handleAdd = (text: string, category: Category) => {
     const newTodo: Todo = {
       id: crypto.randomUUID(),
       text,
       completed: false,
+      category,
     };
     setTodos((prev) => [...prev, newTodo]);
   };
@@ -30,11 +31,32 @@ function App() {
     setTodos((prev) => prev.filter((todo) => todo.id !== id));
   };
 
+  // 할 일 텍스트 수정
+  const handleEdit = (id: string, text: string) => {
+    setTodos((prev) => prev.map((todo) => (todo.id === id ? { ...todo, text } : todo)));
+  };
+
+  // 카테고리 변경
+  const handleCategoryChange = (id: string, category: Category) => {
+    setTodos((prev) => prev.map((todo) => (todo.id === id ? { ...todo, category } : todo)));
+  };
+
+  const existingTexts = todos.map((todo) => todo.text.trim().toLowerCase());
+  const completedCount = todos.filter((todo) => todo.completed).length;
+
   return (
-    <div className="mx-auto mt-16 w-full max-w-md px-4">
-      <Header />
-      <TextInput onAdd={handleAdd} />
-      <TaskList todos={todos} onToggle={handleToggle} onDelete={handleDelete} />
+    <div className="min-h-screen bg-gray-50 px-4 py-12">
+      <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <Header total={todos.length} completed={completedCount} />
+        <TextInput onAdd={handleAdd} existingTexts={existingTexts} />
+        <TaskList
+          todos={todos}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          onCategoryChange={handleCategoryChange}
+        />
+      </div>
     </div>
   );
 }
