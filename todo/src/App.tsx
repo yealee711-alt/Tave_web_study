@@ -1,16 +1,25 @@
 import { useState } from 'react';
 import TodoInput from './components/TodoInput';
 import TodoList from './components/TodoList';
-import type { Todo } from './types/todo';
+import {
+  TODO_CATEGORIES,
+  type Todo,
+  type TodoCategory,
+} from './types/todo';
+
+type CategoryFilter = '전체' | TodoCategory;
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryFilter>('전체');
 
-  const addTodo = (text: string) => {
+  const addTodo = (text: string, category: TodoCategory) => {
     const newTodo: Todo = {
       id: crypto.randomUUID(),
       text,
       completed: false,
+      category,
     };
 
     setTodos((previousTodos) => [...previousTodos, newTodo]);
@@ -32,8 +41,35 @@ function App() {
     );
   };
 
-  const completedCount = todos.filter((todo) => todo.completed).length;
+  const editTodo = (
+    id: string,
+    text: string,
+    category: TodoCategory,
+  ) => {
+    setTodos((previousTodos) =>
+      previousTodos.map((todo) =>
+        todo.id === id ? { ...todo, text, category } : todo,
+      ),
+    );
+  };
+
+  const completedCount = todos.filter(
+    (todo) => todo.completed,
+  ).length;
+
   const remainingCount = todos.length - completedCount;
+
+  const filteredTodos =
+    selectedCategory === '전체'
+      ? todos
+      : todos.filter(
+          (todo) => todo.category === selectedCategory,
+        );
+
+  const categoryFilters: CategoryFilter[] = [
+    '전체',
+    ...TODO_CATEGORIES,
+  ];
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet-100 via-slate-50 to-indigo-100 px-4 py-8 sm:px-6 sm:py-12">
@@ -65,10 +101,37 @@ function App() {
             </span>
           </div>
 
+          <div
+            className="mb-5 flex flex-wrap gap-2"
+            aria-label="카테고리 필터"
+          >
+            {categoryFilters.map((category) => (
+              <button
+                key={category}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  selectedCategory === category
+                    ? 'bg-violet-600 text-white shadow-sm'
+                    : 'bg-violet-50 text-violet-600 hover:bg-violet-100'
+                }`}
+                type="button"
+                onClick={() => setSelectedCategory(category)}
+                aria-pressed={selectedCategory === category}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
           <TodoList
-            todos={todos}
+            todos={filteredTodos}
             onToggle={toggleTodo}
             onDelete={deleteTodo}
+            onEdit={editTodo}
+            emptyMessage={
+              selectedCategory === '전체'
+                ? '아직 등록된 할 일이 없어요.'
+                : `${selectedCategory} 카테고리에 등록된 할 일이 없어요.`
+            }
           />
         </section>
 
