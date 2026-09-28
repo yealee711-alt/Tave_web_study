@@ -1,27 +1,37 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-// 1. 데이터 타입 정의 (id는 문자열, 완료 여부는 completed)
+// Union Type 적용
+export type Category = 'study' | 'work' | 'etc';
+
 export interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  category: Category;
 }
 
-// 2. 초기 상태
 const initialState: Todo[] = [
-  { id: crypto.randomUUID(), text: '리덕스 툴킷 공부하기', completed: false },
+  {
+    id: crypto.randomUUID(),
+    text: '리덕스 공부하기',
+    completed: false,
+    category: 'study',
+  },
 ];
 
-// 3. 슬라이스 (상태 변경 로직)
 const todoSlice = createSlice({
   name: 'todos',
   initialState,
   reducers: {
-    addTodo: (state, action: PayloadAction<string>) => {
+    addTodo: (
+      state,
+      action: PayloadAction<{ text: string; category: Category }>,
+    ) => {
       state.push({
-        id: crypto.randomUUID(), // 고유한 문자열 ID 생성
-        text: action.payload,
+        id: crypto.randomUUID(),
+        text: action.payload.text,
         completed: false,
+        category: action.payload.category,
       });
     },
     toggleTodo: (state, action: PayloadAction<string>) => {
@@ -30,11 +40,22 @@ const todoSlice = createSlice({
         todo.completed = !todo.completed;
       }
     },
+    // (제목 수정)
+    editTodo: (state, action: PayloadAction<{ id: string; text: string }>) => {
+      const todo = state.find((t) => t.id === action.payload.id);
+      if (todo) {
+        todo.text = action.payload.text;
+      }
+    },
     deleteTodo: (state, action: PayloadAction<string>) => {
       return state.filter((t) => t.id !== action.payload);
+    },
+    clearCompleted: (state) => {
+      return state.filter((t) => !t.completed);
     },
   },
 });
 
-export const { addTodo, toggleTodo, deleteTodo } = todoSlice.actions;
+export const { addTodo, toggleTodo, editTodo, deleteTodo, clearCompleted } =
+  todoSlice.actions;
 export default todoSlice.reducer;
