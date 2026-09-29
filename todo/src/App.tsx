@@ -1,71 +1,71 @@
-import {useState} from 'react'
-import Header from './components/Header'
-import TextInput from './components/TextInput'
-import TaskList from './components/TaskList'
-import type {Category, Task} from './types'
-import CategoryFilter from './components/CategoryFilter'
+import { useState } from "react";
+import Header from "./components/Header";
+import TextInput from "./components/TextInput";
+import TaskList from "./components/TaskList";
+import type { Category, Task } from "./types";
+import CategoryFilter from "./components/CategoryFilter";
 
 function App() {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [selectedCategory, setSelectedCategory] = 
-    useState<Category | 'All'>('All')
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | "All">(
+    "All",
+  );
 
-  function addTask(text: string, category: Category){
+  function addTask(text: string, category: Category) {
     const newTask: Task = {
       id: Date.now(),
-      text: text,
+      text,
       completed: false,
-      category: category,
-    }
-    setTasks([...tasks, newTask])
-  }
-  function toggleTask(id: number){
-    setTasks(
-      tasks.map((task)=>
-        task.id === id
-          ? {...task, completed: !task.completed}
-          : task
-      )
-    )
-  }
-  function deleteTask(id: number){
-    setTasks(
-      tasks.filter((task)=>task.id !== id)
-    )
-  }
-  function updateTask(id: number, newText: string){
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id
-          ? { ...task, text: newText}
-          : task))
+      category,
+    };
+    setTasks((prevTasks) => [...prevTasks, newTask]);
   }
 
-  const filteredTasks = 
-    selectedCategory === 'All' 
+  function toggleTask(id: number) {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task,
+      ),
+    );
+  }
+
+  function deleteTask(id: number) {
+    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+  }
+
+  function updateTask(id: number, newText: string) {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, text: newText } : task,
+      ),
+    );
+  }
+
+  const filteredTasks =
+    selectedCategory === "All"
       ? tasks
-      : tasks.filter((task) => task.category === selectedCategory)
+      : tasks.filter((task) => task.category === selectedCategory);
 
   return (
     <main className="min-h-screen bg-stone-100 px-6 py-12">
       <div className="mx-auto flex max-w-md flex-col gap-6 rounded-3xl bg-white p-8">
         <Header />
-        <TextInput onAdd={addTask}/>
+        <TextInput onAdd={addTask} />
         <div className="flex gap-2">
           <CategoryFilter
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
           />
         </div>
-        <TaskList 
+        <TaskList
           tasks={filteredTasks}
-          onToggle={toggleTask} 
+          onToggle={toggleTask}
           onDelete={deleteTask}
           onUpdate={updateTask}
         />
       </div>
     </main>
-  )
+  );
 }
 
-export default App
+export default App;
