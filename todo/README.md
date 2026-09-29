@@ -1,75 +1,65 @@
-# React + TypeScript + Vite
+# Todo App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Tailwind CSS로 만든 Todo 앱입니다.
 
-Currently, two official plugins are available:
+## 주요 기능
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Todo 추가
+  - 최대 20자 입력
+  - Enter / Add 버튼으로 등록
+  - 빈 문자열 입력 방지
+- 카테고리 선택
+  - Study / Personal / Work
+- 카테고리 필터
+  - All / Study / Personal / Work
+- Todo 완료 여부 토글
+- Todo 수정
+  - Edit / Save / Cancel
+- Todo 삭제
 
-## React Compiler
+## 컴포넌트 구성
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```text
+src/
+├── App.tsx
+├── types.ts
+└── components/
+    ├── Header.tsx
+    ├── TextInput.tsx
+    ├── Input.tsx
+    ├── Button.tsx
+    ├── CategoryFilter.tsx
+    ├── TaskList.tsx
+    └── TaskItem.tsx
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+- App : Todo 목록과 주요 상태 관리
+- TextInput : Todo 입력 및 카테고리 선택
+- Input : 공통 input 컴포넌트
+- Button : 공통 button 컴포넌트
+- CategoryFilter : 카테고리별 필터링
+- TaskList : Todo 목록 렌더링
+- TaskItem : 개별 Todo의 완료 / 수정 / 삭제 처리
+- Header : Todo 앱 제목
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Todo 데이터 구조
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+type Category = 'Study' | 'Personal' | 'Work'
 
-```
+type Task = {
+id: number
+text: string
+completed: boolean
+category: Category
+}
+
+## 기술 스택
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+
+## 실행 화면
+
+<img src="./src/img/todo-preview.png" width="500" />
