@@ -33,6 +33,13 @@ function App() {
       tasks.filter((task)=>task.id !== id)
     )
   }
+  function updateTask(id: number, newText: string){
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id
+          ? { ...task, text: newText}
+          : task))
+  }
 
   const filteredTasks = 
     selectedCategory === 'All' 
@@ -54,6 +61,7 @@ function App() {
           tasks={filteredTasks}
           onToggle={toggleTask} 
           onDelete={deleteTask}
+          onUpdate={updateTask}
         />
       </div>
     </main>

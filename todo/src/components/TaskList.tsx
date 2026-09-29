@@ -5,9 +5,10 @@ type TaskListProps = {
   tasks: Task[]
   onToggle: (id: number) => void
   onDelete: (id: number) => void
+  onUpdate: (id: number, newText: string) => void
 }
 
-function TaskList({tasks, onToggle, onDelete}: TaskListProps){
+function TaskList({tasks, onToggle, onDelete,onUpdate}: TaskListProps){
   if (tasks.length === 0) {
   return (
     <p className="py-6 text-center text-sm text-stone-400">
@@ -23,6 +24,7 @@ function TaskList({tasks, onToggle, onDelete}: TaskListProps){
           task={task} 
           onToggle={onToggle}
           onDelete={onDelete}
+          onUpdate={onUpdate}
         />
       ))}
     </ul>
