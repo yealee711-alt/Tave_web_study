@@ -2,16 +2,17 @@ import {useState} from 'react'
 import Header from './components/Header'
 import TextInput from './components/TextInput'
 import TaskList from './components/TaskList'
-import type {Task} from './types'
+import type {Category, Task} from './types'
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([])
 
-  function addTask(text: string){
+  function addTask(text: string, category: Category){
     const newTask: Task = {
       id: Date.now(),
       text: text,
       completed: false,
+      category: category,
     }
     setTasks([...tasks, newTask])
   }

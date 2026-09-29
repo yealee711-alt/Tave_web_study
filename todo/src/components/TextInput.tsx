@@ -1,57 +1,73 @@
 import { useState } from "react"
 import Input from "./Input"
 import Button from "./Button"
+import type { Category } from "../types"
 
 type TextInputProps = {
-  onAdd: (text: string) => void
+  onAdd: (text: string, category: Category) => void
 }
 
 
 function TextInput({onAdd}: TextInputProps){
   const [text, setText] = useState('')
   const [isLimitExceeded, setIsLimitExceeded] = useState(false)
+  const [category, setCategory] = useState<Category>('Study')
 
-function handleAdd() {
-  if (text.trim() === '') return
+function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault()
 
-  onAdd(text)
+  if(text.trim() === '') return
+
+  onAdd(text.trim(), category)
   setText('')
   setIsLimitExceeded(false)
 }
+
   return(
-    <div className="flex flex-col gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-2">
     <div className="flex items-center gap-2">
-<Input
-  value={text}
-  placeholder="Add a new task..."
-  maxLength={20}
 
-  onChange={(event) => {
-    const value = event.target.value
+    <Input
+      value={text}
+      placeholder="Add a new task..."
+      maxLength={20}
 
-    if (value.length > 20) {
-      setIsLimitExceeded(true)
-      return
-    }
+      onChange={(event) => {
+        const value = event.target.value
 
-    setText(value)
-    setIsLimitExceeded(false)
-  }}
+        if (value.length > 20) {
+          setIsLimitExceeded(true)
+          return
+        }
 
-  onKeyDown={(event) => {
-    if (event.key === 'Enter') {
-      handleAdd()
-    }
-  }}
-/>
-        <div className="shrink-0">
-        <Button
-          text="Add"
-          variant="primary"
-          onClick={handleAdd}
-        /> </div>
-        </div>
-      <div className="flex justify-between">
+        setText(value)
+        setIsLimitExceeded(false)
+      }}
+    />
+
+    <select
+      value={category}
+      onChange={(event) =>
+        setCategory(event.target.value as Category)
+      }
+    >
+      <option value="Study">Study</option>
+      <option value="Personal">Personal</option>
+      <option value="Work">Work</option>
+    </select>
+
+    <div className="shrink-0">
+      <Button
+        text="Add"
+        variant="primary"
+        type='submit'
+      /> 
+    </div>
+    </div>
+    
+    <div className="flex justify-between">
           <p className="text-xs text-rose-400">
           {isLimitExceeded && 'Character limit exceeded.'}
           </p>
@@ -61,7 +77,7 @@ function handleAdd() {
         </p>
     </div>
 
-    </div>
+    </form>
   )
 }
 

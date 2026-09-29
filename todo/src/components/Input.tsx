@@ -3,14 +3,12 @@ type InputProps = {
   placeholder: string
   maxLength: number
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
 }
 function Input({
   value,
   placeholder,
   maxLength,
   onChange,
-  onKeyDown,
 }: InputProps) {
   return (
     <input
@@ -20,7 +18,6 @@ function Input({
       placeholder={placeholder}
       maxLength={maxLength}
       onChange={onChange}
-      onKeyDown={onKeyDown}
       />
   )
 }
