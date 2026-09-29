@@ -3,9 +3,12 @@ import Header from './components/Header'
 import TextInput from './components/TextInput'
 import TaskList from './components/TaskList'
 import type {Category, Task} from './types'
+import CategoryFilter from './components/CategoryFilter'
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([])
+  const [selectedCategory, setSelectedCategory] = 
+    useState<Category | 'All'>('All')
 
   function addTask(text: string, category: Category){
     const newTask: Task = {
@@ -31,13 +34,24 @@ function App() {
     )
   }
 
+  const filteredTasks = 
+    selectedCategory === 'All' 
+      ? tasks
+      : tasks.filter((task) => task.category === selectedCategory)
+
   return (
     <main className="min-h-screen bg-stone-100 px-6 py-12">
       <div className="mx-auto flex max-w-md flex-col gap-6 rounded-3xl bg-white p-8">
         <Header />
         <TextInput onAdd={addTask}/>
+        <div className="flex gap-2">
+          <CategoryFilter
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+        </div>
         <TaskList 
-          tasks={tasks}
+          tasks={filteredTasks}
           onToggle={toggleTask} 
           onDelete={deleteTask}
         />
