@@ -38,6 +38,7 @@ function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) {
         {isEditing ? (
           <input
             value={editText}
+            maxLength={20}
             onChange={(event) => setEditText(event.target.value)}
             className="flex-1 rounded-lg border border-gray-200 px-2 py-1 outline-none focus:border-rose-300"
           />

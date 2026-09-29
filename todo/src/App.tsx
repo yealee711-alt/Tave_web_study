@@ -51,12 +51,10 @@ function App() {
       <div className="mx-auto flex max-w-md flex-col gap-6 rounded-3xl bg-white p-8">
         <Header />
         <TextInput onAdd={addTask} />
-        <div className="flex gap-2">
-          <CategoryFilter
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
-        </div>
+        <CategoryFilter
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
         <TaskList
           tasks={filteredTasks}
           onToggle={toggleTask}
