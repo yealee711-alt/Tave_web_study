@@ -1,0 +1,23 @@
+{
+  "posts": [
+    {
+      "id": "2",
+      "title": "React Router 공부",
+      "content": "라우팅을 공부하고 있습니다.",
+      "author": "yeonwoo"
+    },
+    {
+      "title": "ㅇㅇ",
+      "content": "ㅇㅇ",
+      "author": "ㅇㅇㅇㅇ",
+      "id": "uzAObPIjwCE"
+    },
+    {
+      "title": "헬로",
+      "content": "ㅇㅇ",
+      "author": "ㅇ",
+      "id": "gVPDiQ6D7Ss"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
