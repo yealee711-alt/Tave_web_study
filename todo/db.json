@@ -1,0 +1,25 @@
+{
+  "todos": [
+    {
+      "id": "1",
+      "text": "리덕스 툴킷 공부하기",
+      "completed": true
+    },
+    {
+      "id": "2",
+      "text": "React Router 연결하기",
+      "completed": true
+    },
+    {
+      "id": "3",
+      "text": "REST API 연동하기",
+      "completed": false
+    },
+    {
+      "id": "-FbEtjt-45Y",
+      "text": "밥 먹기",
+      "completed": false
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
