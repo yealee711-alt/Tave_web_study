@@ -1,0 +1,4 @@
+# 바깥 폴더에 잘못 설치된 패키지 (각 프로젝트 폴더 안에서 따로 관리)
+node_modules/
+/package.json
+/package-lock.json
