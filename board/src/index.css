@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* 게시판 전용 색: 장미색(rose)에 돌색(stone)을 섞은 차분한 톤 → text-dusty-rose 로 사용 */
+@theme {
+  --color-dusty-rose: #6e4f54;
+  --color-dusty-rose-dark: #553c41;
+}
