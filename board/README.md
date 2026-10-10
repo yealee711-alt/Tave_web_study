@@ -23,3 +23,18 @@ npm run dev
 | `/posts/new` | 게시글 작성 |
 | `/posts/:id` | 게시글 상세 (삭제) |
 | `/posts/:id/edit` | 게시글 수정 |
+
+## 4주차 리팩터링 구조
+
+```
+Page → Custom Hook → TanStack Query → API 함수 → Server
+```
+
+| 폴더 | 역할 |
+| --- | --- |
+| `api/` | 서버 요청 함수 (`getPosts`, `createPost` …) |
+| `hooks/` | `usePosts`, `usePost`, `useCreatePost`, `useUpdatePost`, `useDeletePost` |
+| `types/` | `Post`, `PostInput` |
+| `store/` | Zustand `userStore` (로그인 사용자) |
+| `components/` | `Loading`, `ErrorMessage`, `EmptyState`, `PostCard`, `PostForm`, `BoardLayout` |
+| `pages/` | 화면 단위 컴포넌트 |

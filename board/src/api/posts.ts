@@ -1,4 +1,4 @@
-import type { CreatePostInput, Post } from '../types/post';
+import type { PostInput, Post } from '../types/post';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -22,7 +22,7 @@ export async function getPost(id: string): Promise<Post | null> {
 }
 
 // POST /posts — 작성
-export async function createPost(input: CreatePostInput): Promise<Post> {
+export async function createPost(input: PostInput): Promise<Post> {
   const response = await fetch(`${API_BASE_URL}/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -33,7 +33,7 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
 }
 
 // PATCH /posts/:id — 일부 수정
-export async function updatePost(id: string, input: Partial<CreatePostInput>): Promise<Post> {
+export async function updatePost(id: string, input: Partial<PostInput>): Promise<Post> {
   const response = await fetch(`${API_BASE_URL}/posts/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },

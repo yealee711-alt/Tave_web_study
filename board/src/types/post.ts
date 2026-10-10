@@ -6,4 +6,4 @@ export interface Post {
 }
 
 // 작성·수정할 때 보내는 데이터: id는 서버가 만들어주니까 빼요
-export type CreatePostInput = Omit<Post, 'id'>;
+export type PostInput = Omit<Post, 'id'>;

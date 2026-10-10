@@ -1,65 +1,52 @@
-import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { deletePost, getPost } from '../api/posts';
-import type { Post } from '../types/post';
+import { usePost } from '../hooks/usePost';
+import { useDeletePost } from '../hooks/useDeletePost';
+import Loading from '../components/Loading';
+import ErrorMessage from '../components/ErrorMessage';
+import EmptyState from '../components/EmptyState';
 
 export default function PostDetail() {
   const { id } = useParams(); // /posts/3 → id === "3" (문자열)
   const navigate = useNavigate();
-  const [post, setPost] = useState<Post | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!id) return;
+  const { data: post, isPending, isError, error, refetch } = usePost(id); // 조회: useQuery
+  const deleteMutation = useDeletePost(); // 삭제: useMutation
 
-    const fetchPost = async () => {
-      try {
-        const data = await getPost(id); // 없는 글이면 null
-        setPost(data);
-      } catch {
-        setError('게시글을 불러오지 못했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  if (isPending) return <Loading message="게시글을 불러오는 중입니다..." />;
+  if (isError) {
+    return <ErrorMessage message={`게시글을 불러오지 못했습니다. (${error.message})`} onRetry={() => refetch()} />;
+  }
 
-    fetchPost();
-  }, [id]); // id가 바뀌면 다시 요청
-
-  const handleDelete = async () => {
-    if (!post || !confirm('정말 삭제할까요?')) return;
-    try {
-      await deletePost(post.id);
-      navigate('/posts'); // 삭제 후 목록으로
-    } catch {
-      alert('삭제하지 못했습니다.');
-    }
-  };
-
-  if (isLoading) return <p className="py-8 text-center text-sm text-dusty-rose-dark">게시글을 불러오는 중...</p>;
-  if (error) return <p className="py-8 text-center text-sm text-red-500">{error}</p>;
-
-  // 서버가 404를 준 경우
+  // 서버가 404를 준 경우 (getPost가 null을 돌려줌)
   if (!post) {
     return (
-      <div className="py-8 text-center text-sm text-dusty-rose-dark">
-        <p className="mb-3">존재하지 않는 게시글입니다.</p>
-        <Link to="/posts" className="font-semibold text-dusty-rose-dark underline">
-          목록으로
-        </Link>
-      </div>
+      <EmptyState
+        message="존재하지 않는 게시글입니다."
+        action={
+          <Link to="/posts" className="font-semibold text-dusty-rose-dark underline">
+            목록으로
+          </Link>
+        }
+      />
     );
   }
 
+  const handleDelete = () => {
+    if (!confirm('정말 삭제할까요?')) return;
+    deleteMutation.mutate(post.id, {
+      onSuccess: () => navigate('/posts'), // 삭제 후 목록으로 (목록은 invalidate로 최신화)
+      onError: (err) => alert(`삭제하지 못했습니다. (${err.message})`),
+    });
+  };
+
   const btn = 'rounded-md border border-rose-200 px-3 py-1.5 text-sm text-dusty-rose-dark hover:bg-rose-50';
 
-    return (
+  return (
     <div>
       {/* 게시글 전체를 감싸는 블록 */}
       <article className="rounded-xl border border-rose-100 bg-white p-6">
         <h2 className="break-all text-xl font-bold text-dusty-rose-dark">{post.title}</h2>
-        <p className="ml-0.3 mt-2 text-[11px] text-dusty-rose"> {post.author}</p>
+        <p className="ml-0.5 mt-2 text-[11px] text-dusty-rose">{post.author}</p>
 
         {/* 제목 영역과 본문 사이 구분선 */}
         <hr className="my-4 border-rose-100" />
@@ -75,8 +62,12 @@ export default function PostDetail() {
         <Link to={`/posts/${post.id}/edit`} className={`${btn} ml-auto`}>
           수정
         </Link>
-        <button onClick={handleDelete} className={`${btn} hover:text-red-500`}>
-          삭제
+        <button
+          onClick={handleDelete}
+          disabled={deleteMutation.isPending}
+          className={`${btn} hover:text-red-500 disabled:opacity-50`}
+        >
+          {deleteMutation.isPending ? '삭제 중...' : '삭제'}
         </button>
       </div>
     </div>
