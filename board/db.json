@@ -1,0 +1,23 @@
+{
+  "posts": [
+    {
+      "id": "1",
+      "title": "아 배고프다",
+      "content": "마라탕 치킨 피자",
+      "author": "치이카와"
+    },
+    {
+      "id": "2",
+      "title": "토벌하자",
+      "content": "웅냥냥",
+      "author": "우사기"
+    },
+    {
+      "id": "3",
+      "title": "내 몸",
+      "content": "아 야루",
+      "author": "모몽가"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
