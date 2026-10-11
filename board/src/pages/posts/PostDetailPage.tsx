@@ -1,58 +1,64 @@
-import { useEffect, useState } from 'react'
+
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deletePost, getPost } from '../../api/posts'
-import type { Post } from '../../types/post'
+import { usePost, useDeletePost } from '../../hooks/usePosts'
 
 function PostDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const [post, setPost] = useState<Post | null>(null)
-  const [loading, setLoading] = useState(true)
+  const {
+    data: post,
+    isPending,
+    isError,
+    error,
+    refetch,
+  } = usePost(id)
 
-  useEffect(() => {
-    async function loadPost() {
-      if (!id) {
-        return
-      }
-
-      try {
-        const data = await getPost(Number(id))
-        setPost(data)
-      } catch (error) {
-        console.error(error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadPost()
-  }, [id])
+  const deleteMutation = useDeletePost()
 
   async function handleDelete() {
-    if (!id) {
-      return
-    }
+    if (!post || deleteMutation.isPending) return
 
-    const confirmed = window.confirm('정말 이 게시글을 삭제하시겠습니까?')
+    const confirmed = window.confirm(
+      '정말 이 게시글을 삭제하시겠습니까?'
+    )
 
-    if (!confirmed) {
-      return
-    }
+    if (!confirmed) return
 
     try {
-      await deletePost(Number(id))
+      await deleteMutation.mutateAsync(post.id)
       navigate('/posts')
-    } catch (error) {
-      console.error(error)
-      alert('게시글 삭제에 실패했습니다.')
+    } catch {
+      // 오류는 아래 Error UI에서 표시
     }
   }
 
-  if (loading) {
+  if (!id || !Number.isInteger(Number(id)) || Number(id) <= 0) {
+    return (
+      <div className="py-20 text-center text-gray-500">
+        잘못된 게시글 주소입니다.
+      </div>
+    )
+  }
+
+  if (isPending) {
     return (
       <div className="py-20 text-center text-gray-500">
         게시글을 불러오는 중입니다...
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="py-20 text-center">
+        <p className="mb-4 text-red-500">{error.message}</p>
+        <button
+          onClick={() => void refetch()}
+          className="text-blue-600 hover:underline"
+        >
+          다시 시도
+        </button>
       </div>
     )
   }
@@ -63,11 +69,7 @@ function PostDetailPage() {
         <p className="mb-4 text-gray-500">
           게시글을 찾을 수 없습니다.
         </p>
-
-        <Link
-          to="/posts"
-          className="text-blue-600 hover:underline"
-        >
+        <Link to="/posts" className="text-blue-600">
           목록으로 돌아가기
         </Link>
       </div>
@@ -93,7 +95,6 @@ function PostDetailPage() {
 
           <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
             <span>{post.author}</span>
-
             <span>
               {new Date(post.createdAt).toLocaleDateString()}
             </span>
@@ -103,6 +104,12 @@ function PostDetailPage() {
         <div className="min-h-60 whitespace-pre-wrap py-8 text-gray-700">
           {post.content}
         </div>
+
+        {deleteMutation.isError && (
+          <p className="mb-4 text-sm text-red-500">
+            {deleteMutation.error.message}
+          </p>
+        )}
 
         <div className="flex justify-end gap-3 border-t border-gray-200 pt-6">
           <Link
@@ -115,9 +122,10 @@ function PostDetailPage() {
           <button
             type="button"
             onClick={handleDelete}
-            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700"
+            disabled={deleteMutation.isPending}
+            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
           >
-            삭제
+            {deleteMutation.isPending ? '삭제 중...' : '삭제'}
           </button>
         </div>
       </article>

@@ -1,3 +1,4 @@
+
 import cors from 'cors'
 import express from 'express'
 
@@ -17,6 +18,38 @@ let posts = [
   },
 ]
 
+const fields = ['title', 'content', 'author']
+
+// 요청 데이터 검증
+function validatePost(data, requireAll = false) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return '올바른 요청 데이터를 입력해주세요.'
+  }
+
+  const providedFields = fields.filter((field) =>
+    Object.prototype.hasOwnProperty.call(data, field)
+  )
+
+  if (requireAll && providedFields.length !== fields.length) {
+    return '제목, 내용, 작성자를 모두 입력해주세요.'
+  }
+
+  if (providedFields.length === 0) {
+    return '수정할 항목을 하나 이상 입력해주세요.'
+  }
+
+  for (const field of providedFields) {
+    if (
+      typeof data[field] !== 'string' ||
+      !data[field].trim()
+    ) {
+      return `${field} 항목에 올바른 값을 입력해주세요.`
+    }
+  }
+
+  return null
+}
+
 // 게시글 전체 조회
 app.get('/posts', (req, res) => {
   res.json(posts)
@@ -28,7 +61,9 @@ app.get('/posts/:id', (req, res) => {
   const post = posts.find((post) => post.id === id)
 
   if (!post) {
-    return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
+    return res.status(404).json({
+      message: '게시글을 찾을 수 없습니다.',
+    })
   }
 
   res.json(post)
@@ -36,13 +71,21 @@ app.get('/posts/:id', (req, res) => {
 
 // 게시글 작성
 app.post('/posts', (req, res) => {
+  const error = validatePost(req.body, true)
+
+  if (error) {
+    return res.status(400).json({ message: error })
+  }
+
   const { title, content, author } = req.body
 
   const newPost = {
-    id: posts.length > 0 ? Math.max(...posts.map((post) => post.id)) + 1 : 1,
-    title,
-    content,
-    author,
+    id: posts.length > 0
+      ? Math.max(...posts.map((post) => post.id)) + 1
+      : 1,
+    title: title.trim(),
+    content: content.trim(),
+    author: author.trim(),
     createdAt: new Date().toISOString(),
   }
 
@@ -51,20 +94,29 @@ app.post('/posts', (req, res) => {
   res.status(201).json(newPost)
 })
 
-// 게시글 수정
+// 게시글 수정 (PATCH)
 app.patch('/posts/:id', (req, res) => {
   const id = Number(req.params.id)
   const post = posts.find((post) => post.id === id)
 
   if (!post) {
-    return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
+    return res.status(404).json({
+      message: '게시글을 찾을 수 없습니다.',
+    })
   }
 
-  const { title, content, author } = req.body
+  const error = validatePost(req.body)
 
-  post.title = title
-  post.content = content
-  post.author = author
+  if (error) {
+    return res.status(400).json({ message: error })
+  }
+
+  // 전달받은 필드만 수정
+  for (const field of fields) {
+    if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+      post[field] = req.body[field].trim()
+    }
+  }
 
   res.json(post)
 })
@@ -75,7 +127,9 @@ app.delete('/posts/:id', (req, res) => {
   const postIndex = posts.findIndex((post) => post.id === id)
 
   if (postIndex === -1) {
-    return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
+    return res.status(404).json({
+      message: '게시글을 찾을 수 없습니다.',
+    })
   }
 
   posts.splice(postIndex, 1)
