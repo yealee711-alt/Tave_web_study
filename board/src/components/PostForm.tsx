@@ -11,7 +11,7 @@ export interface PostFormValues {
 interface PostFormProps {
   initialValues?: PostFormValues;
   submitLabel: string;
-  onSubmit: (values: PostFormValues) => Promise<void>;
+  onSubmit: (values: PostFormValues) => Promise<unknown>;
 }
 
 export default function PostForm({

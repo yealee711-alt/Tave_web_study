@@ -1,51 +1,29 @@
-import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { getPost, deletePost } from '../api/posts';
-import type { Post } from '../types/posts';
+import { usePost, useDeletePost } from '../hooks/usePosts';
 import Button from '../components/common/Button';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [post, setPost] = useState<Post | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: post, isPending, isError, error } = usePost(id);
+  const deleteMutation = useDeletePost(id);
 
-  useEffect(() => {
-    if (!id) return;
-    const controller = new AbortController();
-
-    setIsLoading(true);
-    setError('');
-
-    getPost(id, controller.signal)
-      .then((data) => {
-        setPost(data);
-        setIsLoading(false);
-      })
-      .catch((e: unknown) => {
-        if (e instanceof Error && e.name === 'AbortError') return;
-        setError(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.');
-        setIsLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [id]);
-
-  const handleDelete = async () => {
-    if (!id || !window.confirm('이 게시글을 삭제할까요?')) return;
-
-    try {
-      await deletePost(id);
-      navigate('/posts');
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : '삭제에 실패했습니다.');
-    }
+  const handleDelete = () => {
+    if (!window.confirm('이 게시글을 삭제할까요?')) return;
+    deleteMutation.mutate(undefined, {
+      onSuccess: () => navigate('/posts'),
+    });
   };
 
-  if (isLoading) return <p className="text-sm">불러오는 중...</p>;
-  if (error) return <p className="text-sm text-red-600">{error}</p>;
+  if (isPending) return <p className="text-sm">불러오는 중...</p>;
+  if (isError) {
+    return (
+      <p className="text-sm text-red-600">
+        {error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'}
+      </p>
+    );
+  }
   if (!post) return null;
 
   return (
@@ -59,6 +37,14 @@ export default function PostDetailPage() {
 
       <p className="whitespace-pre-wrap">{post.content}</p>
 
+      {deleteMutation.isError && (
+        <p className="text-sm text-red-600">
+          {deleteMutation.error instanceof Error
+            ? deleteMutation.error.message
+            : '삭제에 실패했습니다.'}
+        </p>
+      )}
+
       <div className="flex items-center justify-between">
         <Link to="/posts" className="flex h-9 items-center text-gray-600">
           목록
@@ -71,8 +57,12 @@ export default function PostDetailPage() {
           >
             수정
           </Link>
-          <Button variant="danger" onClick={handleDelete}>
-            삭제
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? '삭제 중...' : '삭제'}
           </Button>
         </div>
       </div>
