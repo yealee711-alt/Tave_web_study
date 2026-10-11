@@ -6,6 +6,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export default function Input({ className = '', ...props }: InputProps) {
   return (
-    <input className={`h-9 px-2 border border-gray-400 ${className}`} {...props} />
+    <input
+      className={`h-9 border border-gray-400 bg-transparent px-2 dark:border-gray-600 ${className}`}
+      {...props}
+    />
   );
 }

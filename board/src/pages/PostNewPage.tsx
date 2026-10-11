@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router';
-import { createPost } from '../api/posts';
+import { useCreatePost } from '../hooks/usePosts';
 import PostForm from '../components/PostForm';
 import type { PostFormValues } from '../components/PostForm';
 
 export default function PostNewPage() {
   const navigate = useNavigate();
+  const { mutateAsync } = useCreatePost();
 
   const handleSubmit = async (values: PostFormValues) => {
-    const created = await createPost({
+    const created = await mutateAsync({
       ...values,
       createdAt: new Date().toISOString(),
     });

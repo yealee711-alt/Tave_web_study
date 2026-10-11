@@ -7,9 +7,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_STYLE: Record<Variant, string> = {
-  outline: 'border border-gray-400',
-  ghost: 'text-gray-600',
-  danger: 'text-red-600',
+  outline: 'border border-gray-400 dark:border-gray-600',
+  ghost: 'text-gray-600 dark:text-gray-400',
+  danger: 'text-red-600 dark:text-red-400',
 };
 
 export default function Button({
