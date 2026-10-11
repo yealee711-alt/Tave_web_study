@@ -1,116 +1,45 @@
-import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ApiError, fetchPost, updatePost } from '../../api/posts'
+import AccessDenied from '../../components/feedback/AccessDenied'
+import ErrorState from '../../components/feedback/ErrorState'
+import { PostDetailSkeleton } from '../../components/feedback/LoadingState'
+import PostForm from '../../components/posts/PostForm'
+import { useAuth } from '../../hooks/useAuth'
+import { usePost } from '../../hooks/usePost'
+import { useUpdatePost } from '../../hooks/usePostMutations'
+import type { PostFormValues } from '../../types/post'
 
-/** 게시글 수정 페이지 (/posts/:id/edit) */
+/** 게시글 수정 페이지 (/posts/:id/edit) — 작성자 본인만 */
 function PostEditPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id = '' } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { isLoggedIn, isAuthor } = useAuth()
 
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [author, setAuthor] = useState('')
+  // 상세 페이지에서 넘어왔다면 이미 캐시에 있어서 요청 없이 바로 그려진다
+  const { data: post, isPending, isError, error, refetch } = usePost(id)
+  const updateMutation = useUpdatePost(id)
 
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [validationError, setValidationError] = useState<string | null>(null)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-
-  // 기존 게시글 데이터를 불러와 form의 초기값으로 채운다
-  useEffect(() => {
-    if (!id) return
-    let ignore = false
-
-    async function load() {
-      setLoading(true)
-      setLoadError(null)
-      try {
-        const post = await fetchPost(id as string)
-        if (!ignore) {
-          setTitle(post.title)
-          setContent(post.content)
-          setAuthor(post.author)
-        }
-      } catch (err) {
-        if (!ignore) {
-          setLoadError(err instanceof ApiError ? err.message : '게시글을 불러오지 못했습니다.')
-        }
-      } finally {
-        if (!ignore) setLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      ignore = true
-    }
-  }, [id])
-
-  function validate(): string | null {
-    if (!title.trim()) return '제목을 입력해주세요.'
-    if (!content.trim()) return '내용을 입력해주세요.'
-    if (!author.trim()) return '작성자를 입력해주세요.'
-    return null
+  function handleSubmit(values: PostFormValues) {
+    updateMutation.mutate(values, {
+      onSuccess: () => navigate(`/posts/${id}`, { replace: true }),
+    })
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (!id) return
-
-    const message = validate()
-    if (message) {
-      setValidationError(message)
-      return
-    }
-
-    setValidationError(null)
-    setSubmitError(null)
-    setSubmitting(true)
-    try {
-      // PATCH /posts/:id — 수정된 값들을 Request Body로 전달
-      await updatePost(id, { title, content, author })
-      navigate(`/posts/${id}`) // 수정 성공 시 상세 페이지로 이동
-    } catch (err) {
-      setSubmitError(err instanceof ApiError ? err.message : '게시글 수정에 실패했습니다.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  if (loading) return <p className="status">불러오는 중...</p>
-  if (loadError) return <p className="status error">{loadError}</p>
+  // URL을 직접 입력해서 들어와도 막는다 (수정 화면에서 로그아웃해도 바로 반영됨)
+  if (!isLoggedIn) return <AccessDenied reason="login" backTo={`/posts/${id}`} />
+  if (isPending) return <PostDetailSkeleton />
+  if (isError) return <ErrorState error={error} onRetry={() => refetch()} />
+  if (!isAuthor(post)) return <AccessDenied reason="forbidden" backTo={`/posts/${id}`} />
 
   return (
-    <div className="post-form">
-      <h2>게시글 수정</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          제목
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label>
-          내용
-          <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={8} />
-        </label>
-        <label>
-          작성자
-          <input value={author} onChange={(e) => setAuthor(e.target.value)} />
-        </label>
-
-        {validationError && <p className="status error">{validationError}</p>}
-        {submitError && <p className="status error">{submitError}</p>}
-
-        <div className="actions">
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
-            {submitting ? '저장 중...' : '저장'}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>
-            취소
-          </button>
-        </div>
-      </form>
-    </div>
+    <PostForm
+      key={post.id} // 다른 게시글로 바뀌면 폼 상태를 새로 초기화
+      heading="게시글 수정"
+      author={post.author}
+      initialValues={{ title: post.title, content: post.content }}
+      onSubmit={handleSubmit}
+      isSubmitting={updateMutation.isPending}
+      submitError={updateMutation.error}
+    />
   )
 }
 

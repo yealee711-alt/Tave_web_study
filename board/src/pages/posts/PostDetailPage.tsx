@@ -1,83 +1,66 @@
-import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ApiError, deletePost, fetchPost } from '../../api/posts'
-import type { Post } from '../../types/post'
+import { getErrorMessage } from '../../api/client'
+import ErrorState from '../../components/feedback/ErrorState'
+import { PostDetailSkeleton } from '../../components/feedback/LoadingState'
+import PostMeta from '../../components/posts/PostMeta'
+import { useAuth } from '../../hooks/useAuth'
+import { usePost } from '../../hooks/usePost'
+import { useDeletePost } from '../../hooks/usePostMutations'
 
 /** 게시글 상세 페이지 (/posts/:id) — Dynamic Route */
 function PostDetailPage() {
   // Dynamic Route: URL 경로의 :id 부분을 Path Parameter로 읽는다
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { isLoggedIn, isAuthor } = useAuth()
 
-  const [post, setPost] = useState<Post | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: post, isPending, isError, error, refetch } = usePost(id)
+  const deleteMutation = useDeletePost()
 
-  useEffect(() => {
-    if (!id) return
-    let ignore = false
-
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await fetchPost(id as string)
-        if (!ignore) setPost(data)
-      } catch (err) {
-        if (!ignore) {
-          setError(err instanceof ApiError ? err.message : '게시글을 불러오지 못했습니다.')
-        }
-      } finally {
-        if (!ignore) setLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      ignore = true
-    }
-  }, [id])
-
-  async function handleDelete() {
+  function handleDelete() {
     if (!id) return
     if (!window.confirm('정말 삭제하시겠습니까?')) return
 
-    try {
-      await deletePost(id)
-      navigate('/posts') // 삭제 성공 시 목록 페이지로 이동
-    } catch (err) {
-      window.alert(err instanceof ApiError ? err.message : '삭제에 실패했습니다.')
-    }
+    deleteMutation.mutate(id, {
+      onSuccess: () => navigate('/posts', { replace: true }), // 삭제 성공 시 목록으로 이동
+    })
   }
 
-  if (loading) return <p className="status">불러오는 중...</p>
-  if (error) return <p className="status error">{error}</p>
-  if (!post) return null
+  if (isPending) return <PostDetailSkeleton />
+  if (isError) return <ErrorState error={error} onRetry={() => refetch()} />
 
   return (
     <div className="post-detail">
       <h2>{post.title}</h2>
-      <div className="post-meta">
-        <span className="avatar" aria-hidden="true">
-          {post.author.charAt(0)}
-        </span>
-        <span className="author">{post.author}</span>
-        <span className="dot">·</span>
-        <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</time>
-      </div>
+      <PostMeta post={post} />
       <p className="content">{post.content}</p>
+
+      {deleteMutation.isError && (
+        <p className="status error">{getErrorMessage(deleteMutation.error, '삭제에 실패했습니다.')}</p>
+      )}
 
       <div className="actions">
         <Link to="/posts" className="btn btn-ghost">
           목록으로
         </Link>
-        <Link to={`/posts/${post.id}/edit`} className="btn btn-secondary">
-          수정
-        </Link>
-        <button type="button" className="btn btn-danger" onClick={handleDelete}>
-          삭제
-        </button>
+        {/* 수정/삭제 버튼은 작성자 본인에게만 보여준다 */}
+        {isAuthor(post) && (
+          <>
+            <Link to={`/posts/${post.id}/edit`} className="btn btn-secondary">
+              수정
+            </Link>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+            </button>
+          </>
+        )}
       </div>
+      {!isLoggedIn && <p className="hint">로그인하면 내가 쓴 글을 수정·삭제할 수 있어요.</p>}
     </div>
   )
 }
