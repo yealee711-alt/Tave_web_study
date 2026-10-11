@@ -1,7 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ApiError, fetchPosts } from '../../api/posts'
-import type { Post } from '../../types/post'
+import EmptyState from '../../components/feedback/EmptyState'
+import ErrorState from '../../components/feedback/ErrorState'
+import { PostListSkeleton } from '../../components/feedback/LoadingState'
+import PostCard from '../../components/posts/PostCard'
+import { usePosts } from '../../hooks/usePosts'
 
 /** 게시글 목록 + 검색 페이지 (/posts, /posts?search=keyword) */
 function PostsPage() {
@@ -9,41 +12,61 @@ function PostsPage() {
   // 검색어를 여기 담아두면 새로고침해도 URL에 남아있어서 검색 상태가 유지된다.
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search') ?? ''
-
   const [keyword, setKeyword] = useState(search) // 입력창의 임시 값
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  // useEffect + async/await: search(쿼리 파라미터)가 바뀔 때마다 실제 GET API를 호출한다
-  useEffect(() => {
-    let ignore = false // 언마운트/재요청 사이에 이전 요청 결과가 덮어쓰지 않도록 막는 플래그
-
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await fetchPosts(search || undefined)
-        if (!ignore) setPosts(data)
-      } catch (err) {
-        if (!ignore) {
-          setError(err instanceof ApiError ? err.message : '게시글을 불러오지 못했습니다.')
-        }
-      } finally {
-        if (!ignore) setLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      ignore = true
-    }
-  }, [search])
+  // search가 바뀌면 queryKey가 바뀌어서 React Query가 알아서 다시 요청한다 (useEffect 불필요)
+  const { data: posts, isPending, isError, error, refetch, isFetching } = usePosts(search)
 
   function handleSearch(e: FormEvent) {
     e.preventDefault()
     // 검색 버튼을 누르면 URL의 Query Parameter(search)를 바꾼다 → /posts?search=keyword
-    setSearchParams(keyword ? { search: keyword } : {})
+    setSearchParams(keyword.trim() ? { search: keyword.trim() } : {})
+  }
+
+  function renderContent() {
+    if (isPending) return <PostListSkeleton />
+    if (isError) return <ErrorState error={error} onRetry={() => refetch()} />
+
+    if (posts.length === 0) {
+      return search ? (
+        <EmptyState
+          title={`'${search}' 검색 결과가 없어요`}
+          description="다른 키워드로 검색해보세요."
+          action={
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setKeyword('')
+                setSearchParams({})
+              }}
+            >
+              전체 글 보기
+            </button>
+          }
+        />
+      ) : (
+        <EmptyState
+          title="아직 게시글이 없어요"
+          description="첫 번째 글을 작성해보세요!"
+          action={
+            <Link to="/posts/new" className="btn btn-primary">
+              + 글쓰기
+            </Link>
+          }
+        />
+      )
+    }
+
+    return (
+      <ul className={`post-list${isFetching ? ' refreshing' : ''}`}>
+        {posts.map((post) => (
+          <li key={post.id}>
+            <PostCard post={post} />
+          </li>
+        ))}
+      </ul>
+    )
   }
 
   return (
@@ -62,32 +85,7 @@ function PostsPage() {
         </Link>
       </form>
 
-      {loading && <p className="status">불러오는 중...</p>}
-      {error && <p className="status error">{error}</p>}
-
-      {!loading && !error && (
-        <ul className="post-list">
-          {posts.length === 0 && <li className="empty">게시글이 없습니다.</li>}
-          {posts.map((post) => (
-            <li key={post.id}>
-              <Link to={`/posts/${post.id}`} className="post-card">
-                <strong>{post.title}</strong>
-                <p>{post.content}</p>
-                <div className="post-meta">
-                  <span className="avatar" aria-hidden="true">
-                    {post.author.charAt(0)}
-                  </span>
-                  <span className="author">{post.author}</span>
-                  <span className="dot">·</span>
-                  <time dateTime={post.createdAt}>
-                    {new Date(post.createdAt).toLocaleDateString('ko-KR')}
-                  </time>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      {renderContent()}
     </div>
   )
 }

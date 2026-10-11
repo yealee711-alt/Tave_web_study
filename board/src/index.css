@@ -28,8 +28,21 @@
   font-family: -apple-system, system-ui, 'Segoe UI', 'Noto Sans KR', Roboto, sans-serif;
 }
 
+/*
+ * 다크 테마 토큰.
+ *  - 테마가 'system'이면 <html>에 data-theme 속성이 없어서 OS 설정(prefers-color-scheme)을 따르고
+ *  - 'light' / 'dark'를 고르면 data-theme 속성이 OS 설정보다 우선한다 (store/useThemeStore)
+ */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --text: #f7e5ec;
     --text-muted: #b98ca3;
     --bg: #1f1319;
@@ -49,6 +62,27 @@
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
     --shadow-lift: 0 14px 32px rgba(0, 0, 0, 0.45);
   }
+}
+
+:root[data-theme='dark'] {
+  --text: #f7e5ec;
+  --text-muted: #b98ca3;
+  --bg: #1f1319;
+  --surface: #2a1a22;
+  --border: #3d2530;
+  --border-strong: #52303f;
+
+  --accent: #ff6fa5;
+  --accent-hover: #ff8ab5;
+  --accent-soft: #3d2130;
+  --accent-text: #1f1319;
+
+  --danger: #f08099;
+  --danger-soft: #3a1f2b;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 14px 32px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -108,14 +142,62 @@ h3 {
   letter-spacing: -0.02em;
 }
 
-.board-path {
-  font-size: 12px;
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 헤더에서 쓰는 작은 알약 버튼 (테마 토글, 로그인/로그아웃) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--text-muted);
-  font-family: ui-monospace, Consolas, monospace;
   background: var(--surface);
   border: 1px solid var(--border);
-  padding: 3px 9px;
+  padding: 5px 11px;
   border-radius: var(--radius-pill);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-input {
+  width: 96px;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.user-input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .board-content {
@@ -161,12 +243,10 @@ h3 {
   border-radius: var(--radius-md);
 }
 
-.post-list li.empty {
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--text-muted);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-md);
+/* 검색어를 바꿔서 다시 불러오는 동안 이전 목록을 흐리게 */
+.post-list.refreshing {
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
 }
 
 .post-card {
@@ -405,4 +485,151 @@ h3 {
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* ---------- Empty / Error 상태 ---------- */
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px 24px;
+  text-align: center;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+}
+
+.state-box strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.state-box p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.state-box .actions {
+  margin-top: 14px;
+}
+
+.state-box.error {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+  background: var(--danger-soft);
+}
+
+.state-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+/* ---------- Loading 스켈레톤 ---------- */
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-card:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.post-detail[aria-busy='true'] {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.skeleton {
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--border) 25%, var(--accent-soft) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-title {
+  height: 18px;
+  width: 55%;
+}
+
+.skeleton-heading {
+  height: 26px;
+  width: 65%;
+}
+
+.skeleton-line {
+  width: 90%;
+}
+
+.skeleton-line.short {
+  width: 40%;
+}
+
+.skeleton-meta {
+  height: 12px;
+  width: 30%;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .board-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .search-bar {
+    flex-wrap: wrap;
+  }
+
+  .search-bar input {
+    flex-basis: 100%;
+  }
+}
+
+.form-author {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.form-author strong {
+  margin-left: 6px;
+  color: var(--text);
+}
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
 }

@@ -9,18 +9,19 @@ export interface Post {
   createdAt: string
 }
 
-/** POST /posts 요청 바디 */
+/**
+ * POST /posts 요청 바디.
+ * author는 보내지 않는다 — 서버가 로그인 헤더(X-User-Nickname)로 작성자를 정한다.
+ */
 export interface CreatePostRequest {
   title: string
   content: string
-  author: string
 }
 
-/** PATCH /posts/:id 요청 바디 — 일부 필드만 보내도 되므로 전부 선택적(optional) */
+/** PATCH /posts/:id 요청 바디 — 일부 필드만 보내도 되므로 전부 선택적(optional). 작성자는 바꿀 수 없다 */
 export interface UpdatePostRequest {
   title?: string
   content?: string
-  author?: string
 }
 
 /** GET /posts/:id 응답 */
@@ -29,7 +30,5 @@ export type PostResponse = Post
 /** GET /posts 응답 */
 export type PostListResponse = Post[]
 
-/** 에러 응답(4xx, 5xx)에서 공통으로 내려주는 형태 */
-export interface ApiErrorResponse {
-  message: string
-}
+/** 작성/수정 폼에서 다루는 값 */
+export type PostFormValues = CreatePostRequest
