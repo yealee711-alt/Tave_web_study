@@ -1,91 +1,70 @@
-import { useEffect, useState } from "react";
-import type { Post } from "../types/post";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { deletePost, getPost } from "../api/posts";
+import { deletePost } from "../api/posts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import usePost from "../hooks/usePost";
+import BookmarkButton from "../components/BookmarkButton";
+import useBookmarkStore from "../stores/useBookmarkStore";
+import StatePanel from "../components/StatePanel";
+import Icon from "../components/Icon";
 
 function PostDetail() {
   const { id } = useParams();
-
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: post, isPending: loading, error: loadError } = usePost(id);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const data = await getPost(id!);
-        setPost(data);
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "알 수 없는 오류가 발생했습니다.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+  const removeBookmark = useBookmarkStore((state) => state.removeBookmark);
 
-    fetchPost();
-  }, [id]);
+  const deleteMutation = useMutation({
+    mutationFn: deletePost,
+
+    onSuccess: async (_, deletedId) => {
+      removeBookmark(deletedId);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["posts"],
+      });
+
+      queryClient.removeQueries({
+        queryKey: ["post", deletedId],
+        exact: true,
+      });
+
+      navigate("/posts");
+    },
+  });
+
+  const isDeleting = deleteMutation.isPending;
+  const deleteError = deleteMutation.error?.message ?? "";
 
   // DELETE 기능 수현 - 삭제 함수 추가
-  const handleDelete = async () => {
-    const isConfirmed = window.confirm("정말 삭제하시겠습니까?");
+  const handleDelete = () => {
+    if (deleteMutation.isPending || !id) return;
 
+    const isConfirmed = window.confirm("정말 삭제하시겠습니까?");
     if (!isConfirmed) return;
 
-    try {
-      await deletePost(id!);
-      navigate("/posts");
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "알 수 없는 오류가 발생했습니다.",
-      );
-    }
+    deleteMutation.mutate(id);
   };
-  if (loading) return <p>로딩 중...</p>;
-  if (error) return <p>{error}</p>;
-  if (!post) return <p>게시글이 없습니다.</p>;
+
+  if (!id) return <StatePanel message="게시글 ID가 없습니다." error />;
+  if (loading) return <StatePanel message="게시글을 불러오는 중..." loading />;
+  if (loadError && !post) return <StatePanel message={loadError.message} error />;
+  if (!post) return <StatePanel message="게시글이 없습니다." />;
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
-      <div className="mx-auto max-w-3xl">
-        <div className="rounded-xl border border-gray-200 bg-white p-8">
-          <h1 className="mb-4 text-3xl font-bold">{post.title}</h1>
-
-          <p className="mb-6 text-sm text-gray-500">작성자: {post.author}</p>
-
-          <div className="min-h-40 whitespace-pre-wrap border-t border-gray-200 pt-6 text-gray-800">
-            {post.content}
-          </div>
-
-          <div className="mt-8 flex gap-2">
-            <Link
-              to="/posts"
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2"
-            >
-              목록으로
-            </Link>
-
-            <Link
-              to={`/posts/${id}/edit`}
-              className="rounded-lg bg-gray-800 px-4 py-2 text-white"
-            >
-              수정
-            </Link>
-
-            <button
-              onClick={handleDelete}
-              className="rounded-lg bg-red-500 px-4 py-2 text-white"
-            >
-              삭제
-            </button>
-          </div>
+    <div className="mx-auto max-w-3xl">
+      <Link to="/posts" className="mb-5 inline-flex min-h-10 items-center gap-2 text-sm text-muted transition hover:text-ink"><Icon name="arrow" className="size-4" />게시글 목록</Link>
+      <article className="paper">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><span className="eyebrow">STUDY NOTE</span><BookmarkButton postId={post.id} disabled={isDeleting} /></div>
+        <h1 className="break-words text-2xl font-semibold leading-snug tracking-tight sm:text-3xl">{post.title}</h1>
+        <div className="mt-5 flex items-center gap-3 border-b border-line pb-7"><span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#eeebfa] text-sm font-semibold text-accent">{post.author.slice(0, 1)}</span><div className="min-w-0"><p className="break-words text-sm font-medium">{post.author}</p><p className="mt-0.5 text-[10px] text-muted">작성자</p></div></div>
+        <div className="min-h-60 whitespace-pre-wrap break-words py-8 text-[15px] leading-8 text-ink/80">{post.content}</div>
+        {deleteError && <p role="alert" className="mb-5 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{deleteError}</p>}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
+          <Link to="/posts" className="btn btn-secondary"><Icon name="arrow" className="size-4" />목록으로</Link>
+          <div className="flex gap-2"><Link to={`/posts/${id}/edit`} className="btn btn-primary"><Icon name="edit" className="size-4" />수정</Link><button type="button" onClick={handleDelete} disabled={isDeleting} className="btn btn-danger"><Icon name="trash" className="size-4" />{isDeleting ? "삭제 중..." : "삭제"}</button></div>
         </div>
-      </div>
+      </article>
     </div>
   );
 }

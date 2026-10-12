@@ -1,112 +1,79 @@
-/*
-CRUD - 수정 기능 수현
- */
-import { useEffect, useState } from "react";
-import { getPost, updatePost } from "../api/posts";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import type { FormEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updatePost } from "../api/posts";
+import type { Post } from "../types/post";
+import PostForm from "../components/PostForm";
+import usePost from "../hooks/usePost";
+import usePostForm from "../hooks/usePostForm";
+import StatePanel from "../components/StatePanel";
 
 function PostEdit() {
   const { id } = useParams();
+  const { data: post, isPending, error } = usePost(id);
+
+  if (!id) return <StatePanel message="게시글 ID가 없습니다." error />;
+  if (isPending) return <StatePanel message="게시글을 불러오는 중..." loading />;
+  if (error && !post) return <StatePanel message={error.message} error />;
+  if (!post) return <StatePanel message="게시글이 없습니다." />;
+
+  return <PostEditForm key={id} post={post} />;
+}
+
+function PostEditForm({ post }: { post: Post }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
-  const [error, setError] = useState("");
+  const { values, error, setError, handleChange, validate } = usePostForm({
+    title: post.title,
+    content: post.content,
+    author: post.author,
+  });
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const data = await getPost(id!);
+  const updateMutation = useMutation({
+    mutationFn: (formValues: Omit<Post, "id">) =>
+      updatePost(post.id, formValues),
 
-        setTitle(data.title);
-        setContent(data.content);
-        setAuthor(data.author);
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "알 수 없는 오류가 발생했습니다.",
-        );
-      }
-    };
+    onSuccess: async (updatedPost) => {
+      queryClient.setQueryData(["post", post.id], updatedPost);
 
-    fetchPost();
-  }, [id]);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    try {
-      await updatePost(id!, {
-        title,
-        content,
-        author,
+      await queryClient.invalidateQueries({
+        queryKey: ["posts"],
       });
 
-      navigate(`/posts/${id}`);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "알 수 없는 오류가 발생했습니다.",
-      );
-    }
+      navigate(`/posts/${post.id}`);
+    },
+
+    onError: (error) => {
+      setError(error.message);
+    },
+  });
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (updateMutation.isPending) return;
+    if (!validate()) return;
+
+    updateMutation.mutate(values);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
+    <div>
       <div className="mx-auto max-w-3xl">
-        <div className="rounded-xl border border-gray-200 bg-white p-8">
-          <h1 className="mb-6 text-2xl font-bold">게시글 수정</h1>
+        <div className="paper">
+          <div className="mb-8 border-b border-line pb-7"><p className="eyebrow mb-3">STUDY NOTE</p><h1 className="text-2xl font-semibold tracking-tight">게시글 수정</h1><p className="mt-3 text-sm leading-6 text-muted">기록을 다시 읽고, 더 나은 이야기로 다듬어보세요.</p></div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="mb-2 block text-sm font-medium">제목</label>
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-black"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">작성자</label>
-              <input
-                value={author}
-                onChange={(event) => setAuthor(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-black"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">내용</label>
-              <textarea
-                value={content}
-                onChange={(event) => setContent(event.target.value)}
-                rows={8}
-                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-black"
-              />
-            </div>
-
-            {error && <p className="text-sm text-red-500">{error}</p>}
-
-            <div className="flex gap-2">
-              <Link
-                to={`/posts/${id}`}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2"
-              >
-                취소
-              </Link>
-
-              <button
-                type="submit"
-                className="rounded-lg bg-black px-4 py-2 text-white"
-              >
-                수정하기
-              </button>
-            </div>
-          </form>
+          <PostForm
+            values={values}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+            error={error}
+            isSubmitting={updateMutation.isPending}
+            submitLabel="수정하기"
+            submittingLabel="수정 중..."
+            cancelTo={`/posts/${post.id}`}
+          />
         </div>
       </div>
     </div>
