@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #242838;
+  --color-muted: #727783;
+  --color-canvas: #f6f7fb;
+  --color-line: #e9ebf1;
+  --color-accent: #7971c7;
+}
+
+@layer base {
+  body { @apply m-0 bg-[#ececf0] font-sans text-ink antialiased; }
+  button, a, input, textarea { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled) { cursor: pointer; }
+  ::selection { background: #e2defa; }
+  :focus-visible { outline: 3px solid #a49bdd; outline-offset: 4px; }
+}
+
+@layer components {
+  .btn { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply bg-ink text-white hover:bg-[#424760]; }
+  .btn-secondary { @apply border border-line bg-white text-ink hover:border-[#c8c3e7] hover:bg-[#f5f3ff]; }
+  .btn-danger { @apply bg-[#fff0f0] text-[#b44750] hover:bg-[#ffe2e4]; }
+  .form-label { @apply mb-2.5 block text-sm font-medium text-ink; }
+  .form-input { @apply w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm leading-6 text-ink outline-none transition placeholder:text-[#9da1ad] focus:border-accent focus:bg-white focus:ring-4 focus:ring-[#eeebfa] disabled:opacity-60; }
+  .paper { @apply rounded-3xl border border-white bg-white p-5 shadow-[0_8px_30px_-20px_rgba(36,40,56,0.2)] sm:p-9; }
+  .eyebrow { @apply text-[10px] font-semibold tracking-[0.2em] text-muted; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

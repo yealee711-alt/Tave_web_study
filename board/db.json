@@ -1,0 +1,29 @@
+{
+  "posts": [
+    {
+      "id": "2",
+      "title": "React Router 공부 하기실허용가일",
+      "content": "안녕하세용가리",
+      "author": "ㅇ"
+    },
+    {
+      "title": "안녕하세용가리ㅇㅇ",
+      "content": "오늘은 공부를 해보았습니다.",
+      "author": "채연우",
+      "id": "uzAObPIjwCE"
+    },
+    {
+      "title": "오늘의 일기",
+      "content": "배가고프다",
+      "author": "채연서",
+      "id": "gVPDiQ6D7Ss"
+    },
+    {
+      "title": "개쩐다",
+      "content": "안녕하세요\n",
+      "author": "채연우",
+      "id": "i85_OdObqzY"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
